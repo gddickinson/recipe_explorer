@@ -365,16 +365,7 @@ Use the Export button in Shopping List tab
 
 ## License
 
-This application is provided for personal and educational use.
-
-Recipe data compiled from public domain traditional recipes and general culinary knowledge.
-
----
-
-**Version**: 1.0  
-**Last Updated**: January 2026
-
-Enjoy cooking and exploring world cuisines! 🍳👨‍🍳👩‍🍳
+Released under the [MIT licence](LICENSE).
 
 ## Quick Start Guide
 
