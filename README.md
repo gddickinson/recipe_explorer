@@ -367,6 +367,15 @@ Use the Export button in Shopping List tab
 
 Released under the [MIT licence](LICENSE).
 
+Recipe data compiled from public domain traditional recipes and general culinary knowledge.
+
+---
+
+**Version**: 1.0  
+**Last Updated**: January 2026
+
+Enjoy cooking and exploring world cuisines! 🍳👨‍🍳👩‍🍳
+
 ## Quick Start Guide
 
 1. **Run the application**: `python3 run_recipe_explorer.py`
