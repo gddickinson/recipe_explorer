@@ -21,3 +21,16 @@
   anaconda base lacks libsqlite).
 - Tests: `python -m pytest -q tests/` 535 passed; node tests ok; screenshots static 20 routes + server 15 routes ok,
   no phone overflow; local add/edit/rate exercised in a browser against a temporary copy of the database.
+
+## 2026-11-11 -- Equipment links and desktop scaling (after the web interface was merged)
+- Bug fix: the seed script silently dropped equipment missing from the equipment table (20 entries in 18 recipes:
+  Rolling Pin, Pastry Brush, Piping Bag, Steamer, ...). New `db_operations.find_or_create_equipment_id()`: exact match,
+  else "X (optional)" -> optional link to X, else add X (category "Other"). Tests: `tests/test_equipment_linking.py`.
+- Data fix: `scripts/repair_equipment_links.py` added 16 equipment rows and 20 links to the 54 seed recipes in
+  `recipe_collection.db` (43 equipment items now). Recipes 55-124 untouched (their ingredient links await George).
+  Some new names overlap existing ones (Strainer vs Colander/Strainer, Large Skillet vs Skillet/Frying Pan); kept as
+  written in the seed data.
+- Desktop: servings spinbox and "Metric units" checkbox in the Recipes tab scale the ingredient list with
+  `recipe_scaling.py`; "Add to shopping list" uses the scaled amounts; optional equipment is marked. The rating dialog
+  now refreshes via the current recipe (it used the listbox selection, which can be empty after the dialog).
+  Test: `tests/test_desktop_scaling.py` (real Tk, temp DB copy, skipped without a display).
