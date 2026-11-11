@@ -1,0 +1,44 @@
+/* Recipe Collection Explorer: tomato / basil / saffron accents and page styles on top of the shared style.css. */
+:root { --accent:#ff7a59; --accent2:#7bd88f; --accent3:#ffd166; --glow:rgba(255,122,89,.13); --bg:#0a0807; --panel:#15100d; }
+.mark { border-color:var(--accent); }
+main:focus, main:focus-visible { outline:none; }
+a { color:var(--accent3); }
+.filters { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px 14px; align-items:end; }
+.filters .fq { grid-column:span 2; }
+.filters label { margin-top:0; }
+.fchk label { display:flex; gap:6px; align-items:center; color:var(--ink); padding-bottom:8px; }
+.freset button { margin:0; }
+.card .meta { display:flex; justify-content:space-between; gap:8px; font:12px var(--mono); color:var(--mute); margin-top:8px; }
+.card .meta span { display:inline; margin:0; font-size:12px; color:var(--mute); }
+.card .rate { color:var(--accent3) !important; }
+.door b .n { font:600 13px var(--mono); color:var(--accent); font-style:normal; margin-left:6px; }
+a.tile { color:var(--ink); } a.tile:hover { text-decoration:none; box-shadow:0 0 18px var(--glow); }
+.kv { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin:16px 0; }
+.kv div { background:rgba(21,16,13,.85); border:1px solid var(--line); border-radius:4px; padding:10px 12px; }
+.kv b { display:block; font:600 15px var(--mono); color:var(--ink); overflow-wrap:anywhere; }
+.kv span { font-size:12px; color:var(--mute); }
+.recipe-side { display:grid; grid-template-columns:minmax(0,360px) minmax(0,1fr); gap:22px; align-items:start; }
+.ings { list-style:none; padding:0; margin:0; }
+.ings li { padding:6px 0; border-bottom:1px solid var(--line); display:flex; gap:10px; }
+.ings .q { font:600 14px var(--mono); color:var(--accent); min-width:92px; flex:none; }
+.ings .note { color:var(--mute); font-size:13px; }
+.steps { padding-left:22px; } .steps li { margin:6px 0; }
+.scale { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+.scale > div { flex:1; min-width:120px; } .scale label { margin-top:0; }
+.stepper { display:flex; } .stepper button { margin:0; padding:8px 12px; } .stepper input { text-align:center; min-width:0; }
+.stars { color:var(--accent3); letter-spacing:2px; }
+.shop-item { display:flex; gap:10px; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--line); }
+.shop-item input { margin-top:5px; } .shop-item.done span { text-decoration:line-through; color:var(--mute); }
+.shop-item .from { display:block; font-size:12px; color:var(--mute); }
+.chosen { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid var(--line); }
+.chosen a { flex:1; min-width:160px; } .chosen input { width:80px; } .chosen button { margin:0; }
+.formgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0 14px; }
+.toast { color:var(--good); }
+@media (max-width:760px) {
+  .filters { grid-template-columns:1fr 1fr; } .filters .fq { grid-column:1 / -1; } .filters select { min-width:0; }
+  .recipe-side { grid-template-columns:1fr; }
+}
+@media print {
+  .top, .foot, #bg, .noprint { display:none !important; } body { background:#fff; color:#000; }
+  .panel, .card { background:none; border-color:#999; } .shop-item span, .ings .q { color:#000; }
+}

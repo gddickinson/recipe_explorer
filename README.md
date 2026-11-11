@@ -84,6 +84,40 @@ A Python-based GUI application for managing recipes, ingredients, and kitchen eq
 - Export shopping list to text file
 - Import/backup capability
 
+## Web interface and static site
+
+The collection can also be browsed in a web browser, either as a local app (with adding, editing and rating) or as a
+static site for GitHub Pages: https://gddickinson.github.io/recipe_explorer/ (once Pages is enabled).
+
+![Home page](docs/img/home.png)
+![Recipe scaled to 8 servings in metric units](docs/img/recipe_scaled.png)
+
+- **Recipes**: search names, descriptions, instructions, ingredients and equipment; filter by cuisine, category,
+  difficulty, total time, diet (vegetarian, vegan, gluten-free, dairy-free), ingredient or equipment.
+- **Recipe pages**: scale to any number of servings and switch between the units as written and metric (cups and
+  spoons to ml, ounces and pounds to grams), via `recipe_scaling.py`.
+- **Shopping list**: add recipes at chosen servings; see combined totals or a list per recipe, tick items off, print
+  or export as text (the desktop app's format). The list is kept in your browser only.
+- **Ingredients, equipment and world cuisines**, each linked to the recipes that use them.
+- **Add, edit and rate recipes** (local app only): saved to `recipe_collection.db`, the file the desktop app uses.
+
+![Recipe list](docs/img/recipes.png)
+![Shopping list](docs/img/shopping.png)
+
+### Run the web app
+
+```bash
+pip install -r requirements-web.txt
+python run_web.py                    # http://127.0.0.1:8115
+python scripts/build_static.py       # static site in site/ (what GitHub Pages publishes)
+python -m pytest -q tests/           # web, scaling/search parity and ingredient-link tests
+```
+
+Browsing opens the database read-only; only the add/edit/rate forms write to it. The static site exports every
+recipe, ingredient, equipment item and cuisine as JSON and does search, scaling and the shopping list in the browser
+with JavaScript ports of the Python rules (tests check both give identical results). Set `RECIPE_DB` to use another
+database file.
+
 ## Installation & Requirements
 
 ### Requirements

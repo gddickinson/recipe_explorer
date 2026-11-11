@@ -14,7 +14,7 @@ from datetime import datetime
 import re
 import urllib.parse
 
-from db_operations import find_or_create_ingredient_id
+from db_operations import find_or_create_ingredient_id, parse_ingredient_line
 
 class RecipeExplorerApp:
     def __init__(self, root):
@@ -1758,13 +1758,10 @@ Difficulty: Easy"""
                 
                 for ing_line in ingredients:
                     if ing_line.strip():
-                        # Try to parse quantity and ingredient
-                        # This is a simple parser - could be enhanced
-                        parts = ing_line.strip().split(maxsplit=2)
-                        if len(parts) >= 2:
-                            qty = parts[0]
-                            unit = parts[1] if len(parts) > 2 else ''
-                            ing_name = parts[2] if len(parts) > 2 else parts[1]
+                        # Parse "qty unit name" (see db_operations.parse_ingredient_line)
+                        parsed = parse_ingredient_line(ing_line)
+                        if parsed:
+                            qty, unit, ing_name, notes = parsed
                             
                             # Find (exact name) or create the ingredient
                             ing_id = find_or_create_ingredient_id(cursor, ing_name)
@@ -1772,7 +1769,7 @@ Difficulty: Easy"""
                             cursor.execute('''INSERT INTO recipe_ingredients 
                                             (recipe_id, ingredient_id, quantity, unit, notes)
                                             VALUES (?, ?, ?, ?, ?)''',
-                                         (recipe_id, ing_id, qty, unit, ''))
+                                         (recipe_id, ing_id, qty, unit, notes))
                 
                 self.conn.commit()
                 dialog.destroy()

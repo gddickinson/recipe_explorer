@@ -25,6 +25,27 @@ def find_or_create_ingredient_id(cursor: sqlite3.Cursor, name: str, category: st
     return cursor.lastrowid
 
 
+def parse_ingredient_line(line: str):
+    """One ingredient line -> (quantity, unit, name, notes), or None if it cannot be read.
+
+    "qty | unit | name | notes" (pipe-separated, unit and notes may be empty) keeps every field; a plain line uses
+    the desktop import dialog's rule: "2 cups flour" -> ("2", "cups", "flour", ""), "3 eggs" -> ("3", "", "eggs", "").
+    """
+    line = (line or "").strip()
+    if not line:
+        return None
+    if "|" in line:
+        parts = [p.strip() for p in line.split("|")] + ["", "", ""]
+        qty, unit, name, notes = parts[0], parts[1], parts[2], "|".join(parts[3:]).strip("| ").strip()
+        return (qty, unit, name, notes) if name else None
+    parts = line.split(maxsplit=2)
+    if len(parts) < 2:
+        return None
+    if len(parts) > 2:
+        return parts[0], parts[1], parts[2], ""
+    return parts[0], "", parts[1], ""
+
+
 class RecipeDAO:
     """Data Access Object for the recipe database."""
 
@@ -79,7 +100,7 @@ class RecipeDAO:
     def get_recipe_ingredients(self, recipe_id: int) -> List[Dict]:
         cursor = self.conn.cursor()
         cursor.execute("""
-            SELECT i.name, ri.quantity, ri.unit, ri.notes
+            SELECT i.name, ri.quantity, ri.unit, ri.notes, i.ingredient_id
             FROM recipe_ingredients ri
             JOIN ingredients i ON ri.ingredient_id = i.ingredient_id
             WHERE ri.recipe_id = ?
@@ -90,13 +111,41 @@ class RecipeDAO:
     def get_recipe_equipment(self, recipe_id: int) -> List[Dict]:
         cursor = self.conn.cursor()
         cursor.execute("""
-            SELECT e.name, re.optional
+            SELECT e.name, re.optional, e.equipment_id
             FROM recipe_equipment re
             JOIN equipment e ON re.equipment_id = e.equipment_id
             WHERE re.recipe_id = ?
             ORDER BY re.optional, e.name
         """, (recipe_id,))
         return [dict(row) for row in cursor.fetchall()]
+
+    def get_recipe(self, recipe_id: int) -> Optional[Dict]:
+        row = self.conn.execute("SELECT * FROM recipes WHERE recipe_id = ?", (recipe_id,)).fetchone()
+        return dict(row) if row else None
+
+    def update_recipe(self, recipe_id: int, name, cuisine, category, difficulty,
+                      prep_time, cook_time, total_time, servings,
+                      description, instructions, tips):
+        """Update a recipe's editable fields (the ones the Add Recipe form has)."""
+        self.conn.execute("""
+            UPDATE recipes SET name = ?, cuisine = ?, category = ?, difficulty = ?, prep_time = ?,
+                cook_time = ?, total_time = ?, servings = ?, description = ?, instructions = ?, tips = ?
+            WHERE recipe_id = ?
+        """, (name, cuisine, category, difficulty, prep_time, cook_time, total_time, servings,
+              description, instructions, tips, recipe_id))
+        self.conn.commit()
+
+    def replace_recipe_ingredients(self, recipe_id: int, rows) -> None:
+        """Replace a recipe's ingredient list with rows of (quantity, unit, name, notes)."""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM recipe_ingredients WHERE recipe_id = ?", (recipe_id,))
+        for qty, unit, name, notes in rows:
+            ing_id = find_or_create_ingredient_id(cursor, name)
+            cursor.execute("""
+                INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit, notes)
+                VALUES (?, ?, ?, ?, ?)
+            """, (recipe_id, ing_id, qty, unit, notes))
+        self.conn.commit()
 
     def update_recipe_rating(self, recipe_id: int, rating: float):
         cursor = self.conn.cursor()
