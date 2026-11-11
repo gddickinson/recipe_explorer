@@ -63,3 +63,28 @@ def test_dao_find_or_create_ingredient_prefers_exact_name(tmp_path):
         assert dao.find_or_create_ingredient("Milk") == milk
     finally:
         dao.close()
+
+
+def test_repair_script_relinks_a_copy_of_the_committed_database(tmp_path):
+    import shutil
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import repair_ingredient_links as rep
+    db = tmp_path / "copy.db"
+    shutil.copy(ROOT / "recipe_collection.db", db)
+    rep.repair(str(db))
+    conn = sqlite3.connect(db)
+    try:
+        assert rep.mislinked(conn) == []
+    finally:
+        conn.close()
+    assert rep.repair(str(db), dry_run=True) == []
+
+
+def test_committed_database_has_no_mislinked_seed_ingredients():
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import repair_ingredient_links as rep
+    conn = sqlite3.connect(f"file:{ROOT / 'recipe_collection.db'}?mode=ro", uri=True)
+    try:
+        assert rep.mislinked(conn) == []
+    finally:
+        conn.close()
