@@ -6,6 +6,7 @@ optional = 1 to the equipment without the suffix. All tests work on temporary da
 
 Run: python -m pytest -q tests/test_equipment_linking.py
 """
+import shutil
 import sqlite3
 import sys
 from pathlib import Path
@@ -55,3 +56,23 @@ def test_fresh_database_links_every_seed_equipment(tmp_path):
     finally:
         conn.close()
 
+
+def test_repair_script_links_a_copy_of_the_committed_database(tmp_path):
+    import repair_equipment_links as rep
+    db = tmp_path / "copy.db"
+    shutil.copy(ROOT / "recipe_collection.db", db)
+    rep.repair(str(db))
+    conn = sqlite3.connect(db)
+    try:
+        assert missing_equipment(conn) == []
+    finally:
+        conn.close()
+    assert rep.repair(str(db), dry_run=True) == []
+
+
+def test_committed_database_has_no_missing_seed_equipment():
+    conn = sqlite3.connect(f"file:{ROOT / 'recipe_collection.db'}?mode=ro", uri=True)
+    try:
+        assert missing_equipment(conn) == []
+    finally:
+        conn.close()
