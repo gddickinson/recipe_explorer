@@ -7,6 +7,8 @@ import sqlite3
 from pathlib import Path
 import json
 
+from db_operations import find_or_create_ingredient_id
+
 class RecipeDatabase:
     def __init__(self, db_path="recipe_collection.db"):
         self.db_path = db_path
@@ -2459,19 +2461,8 @@ class RecipeDatabase:
             for ing in recipe['ingredients']:
                 ing_name, quantity, unit, notes = ing if len(ing) == 4 else (*ing, '')
                 
-                # Get or create ingredient
-                cursor.execute('SELECT ingredient_id FROM ingredients WHERE name LIKE ?', (f'%{ing_name}%',))
-                result = cursor.fetchone()
-                
-                if result:
-                    ing_id = result[0]
-                else:
-                    # Create basic ingredient entry if not found
-                    cursor.execute('''
-                        INSERT INTO ingredients (name, category)
-                        VALUES (?, 'Other')
-                    ''', (ing_name,))
-                    ing_id = cursor.lastrowid
+                # Get or create ingredient (exact name match)
+                ing_id = find_or_create_ingredient_id(cursor, ing_name)
                 
                 # Link recipe to ingredient
                 cursor.execute('''

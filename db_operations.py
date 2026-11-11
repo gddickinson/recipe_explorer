@@ -9,6 +9,22 @@ from typing import List, Dict, Optional, Any
 from pathlib import Path
 
 
+def find_or_create_ingredient_id(cursor: sqlite3.Cursor, name: str, category: str = "Other") -> int:
+    """Return the id of the ingredient called `name` (exact, case-insensitive), inserting it if missing.
+
+    Shared by the seed script, the DAO and the desktop import dialog. Names are capped at 50 characters, as the
+    import dialog always did. (A `LIKE '%name%'` lookup used to link e.g. "Onion" to "Green Onions".)
+    The caller commits.
+    """
+    name = name.strip()[:50]
+    cursor.execute("SELECT ingredient_id FROM ingredients WHERE name = ? COLLATE NOCASE", (name,))
+    row = cursor.fetchone()
+    if row:
+        return row[0]
+    cursor.execute("INSERT INTO ingredients (name, category) VALUES (?, ?)", (name, category))
+    return cursor.lastrowid
+
+
 class RecipeDAO:
     """Data Access Object for the recipe database."""
 
@@ -136,21 +152,10 @@ class RecipeDAO:
         return cursor.lastrowid
 
     def find_or_create_ingredient(self, name: str, category: str = "Other") -> int:
-        """Find ingredient by partial name match, or create new one."""
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "SELECT ingredient_id FROM ingredients WHERE name LIKE ?",
-            (f"%{name[:20]}%",),
-        )
-        row = cursor.fetchone()
-        if row:
-            return row[0]
-        cursor.execute(
-            "INSERT INTO ingredients (name, category) VALUES (?, ?)",
-            (name[:50], category),
-        )
+        """Find an ingredient by exact (case-insensitive) name, or create a new one."""
+        ing_id = find_or_create_ingredient_id(self.conn.cursor(), name, category)
         self.conn.commit()
-        return cursor.lastrowid
+        return ing_id
 
     def insert_recipe_ingredient(self, recipe_id, ingredient_id,
                                  quantity, unit, notes=""):

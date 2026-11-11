@@ -14,6 +14,8 @@ from datetime import datetime
 import re
 import urllib.parse
 
+from db_operations import find_or_create_ingredient_id
+
 class RecipeExplorerApp:
     def __init__(self, root):
         self.root = root
@@ -1764,17 +1766,8 @@ Difficulty: Easy"""
                             unit = parts[1] if len(parts) > 2 else ''
                             ing_name = parts[2] if len(parts) > 2 else parts[1]
                             
-                            # Try to find or create ingredient
-                            cursor.execute('SELECT ingredient_id FROM ingredients WHERE name LIKE ?', 
-                                         (f'%{ing_name[:20]}%',))
-                            result = cursor.fetchone()
-                            
-                            if not result:
-                                cursor.execute('INSERT INTO ingredients (name, category) VALUES (?, ?)',
-                                             (ing_name[:50], 'Other'))
-                                ing_id = cursor.lastrowid
-                            else:
-                                ing_id = result[0]
+                            # Find (exact name) or create the ingredient
+                            ing_id = find_or_create_ingredient_id(cursor, ing_name)
                             
                             cursor.execute('''INSERT INTO recipe_ingredients 
                                             (recipe_id, ingredient_id, quantity, unit, notes)
