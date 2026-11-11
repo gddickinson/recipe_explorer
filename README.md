@@ -22,7 +22,7 @@ A Python-based GUI application for managing recipes, ingredients, and kitchen eq
   - Dietary tags
   - Rating system (1-5 stars)
 - Add recipes directly to shopping list
-- Rate and review recipes
+- Rate recipes
 - Copy recipes to clipboard
 
 ### 2. **Ingredients Database**
@@ -73,7 +73,7 @@ A Python-based GUI application for managing recipes, ingredients, and kitchen eq
 - Include all recipe details:
   - Basic info (name, cuisine, category)
   - Timing and servings
-  - Ingredients (linked to ingredient database)
+  - Ingredients (linked to ingredient database) when importing a recipe from text (File → Add New Recipe has no ingredient list)
   - Instructions
   - Tips and notes
 - Update ratings after cooking
@@ -101,7 +101,8 @@ A Python-based GUI application for managing recipes, ingredients, and kitchen eq
    - `recipe_explorer.py` - Main GUI application
    - `recipe_collection.db` - SQLite database (auto-created)
    - `run_recipe_explorer.py` - Application launcher
-   - `RECIPE_README.md` - This file
+   - `README.md` - This file
+   - `db_operations.py` - Shared database helpers (`RecipeDAO`, ingredient lookup)
 
 ## Running the Application
 
@@ -130,7 +131,7 @@ The application will:
 
 ### Recipes Tab
 1. **Browse** recipes in the left panel
-2. **Search** by name or ingredient
+2. **Search** by name, description or instructions
 3. **Filter** by cuisine, category, difficulty, or time
 4. **Click** a recipe to see full details
 5. **Actions:**
@@ -202,6 +203,8 @@ The application will:
 - Regional information
 
 ## Starter Recipes Included
+
+A few examples (the database holds 124 recipes from 17 cuisines):
 
 ### Italian
 - Classic Spaghetti Carbonara
@@ -321,12 +324,12 @@ python3 recipe_database.py
 - JSON for complex fields (nutritional info)
 - Easy to backup and share
 
-## Database Statistics (Starter Data)
+## Database Statistics (recipe_collection.db)
 
-- **Recipes**: 9 from 8 cuisines
-- **Ingredients**: 25 common items
-- **Equipment**: 24 essential and optional items
-- **Cuisines**: 10 world cuisines
+- **Recipes**: 124 from 17 cuisines (54 from `recipe_database.py`, 70 more already in the committed database)
+- **Ingredients**: 335 (31 with full details: storage, substitutes, nutrition, allergens, season)
+- **Equipment**: 27 essential and optional items
+- **Cuisines**: 17 world cuisines
 
 ## Future Enhancements
 
@@ -379,7 +382,7 @@ Enjoy cooking and exploring world cuisines! 🍳👨‍🍳👩‍🍳
 ## Quick Start Guide
 
 1. **Run the application**: `python3 run_recipe_explorer.py`
-2. **Browse recipes**: Click on Recipes tab, explore the 9 starter recipes
+2. **Browse recipes**: Click on Recipes tab, explore the recipes
 3. **Try a recipe**: Click on "Chicken Teriyaki" or "Spaghetti Carbonara"
 4. **Add to shopping list**: Click the 🛒 button
 5. **View your list**: Go to Shopping List tab
