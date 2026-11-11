@@ -25,6 +25,38 @@ def find_or_create_ingredient_id(cursor: sqlite3.Cursor, name: str, category: st
     return cursor.lastrowid
 
 
+OPTIONAL_SUFFIX = " (optional)"
+
+
+def split_optional(name: str):
+    """'Rolling Pin (optional)' -> ('Rolling Pin', True); 'Whisk' -> ('Whisk', False)."""
+    name = name.strip()
+    if name.lower().endswith(OPTIONAL_SUFFIX):
+        return name[: -len(OPTIONAL_SUFFIX)].strip(), True
+    return name, False
+
+
+def find_or_create_equipment_id(cursor: sqlite3.Cursor, name: str, category: str = "Other"):
+    """(equipment_id, optional) for an equipment name as a recipe lists it; missing equipment is added.
+
+    An exact (case-insensitive) match wins, so the existing "Electric Mixer (optional)" row is still used. Otherwise a
+    trailing " (optional)" marks an optional link to the equipment without the suffix ("Blender (optional)" ->
+    Blender, optional). Equipment not in the table yet is inserted (category "Other", not essential) instead of being
+    dropped, as the seed script used to do. The caller commits.
+    """
+    cursor.execute("SELECT equipment_id FROM equipment WHERE name = ? COLLATE NOCASE", (name.strip(),))
+    row = cursor.fetchone()
+    if row:
+        return row[0], False
+    base, optional = split_optional(name)
+    cursor.execute("SELECT equipment_id FROM equipment WHERE name = ? COLLATE NOCASE", (base,))
+    row = cursor.fetchone()
+    if row:
+        return row[0], optional
+    cursor.execute("INSERT INTO equipment (name, category, essential) VALUES (?, ?, 0)", (base, category))
+    return cursor.lastrowid, optional
+
+
 def parse_ingredient_line(line: str):
     """One ingredient line -> (quantity, unit, name, notes), or None if it cannot be read.
 

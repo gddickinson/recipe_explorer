@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 import json
 
-from db_operations import find_or_create_ingredient_id
+from db_operations import find_or_create_equipment_id, find_or_create_ingredient_id
 
 class RecipeDatabase:
     def __init__(self, db_path="recipe_collection.db"):
@@ -2470,17 +2470,13 @@ class RecipeDatabase:
                     VALUES (?, ?, ?, ?, ?)
                 ''', (recipe_id, ing_id, quantity, unit, notes))
             
-            # Add equipment for this recipe
+            # Add equipment for this recipe (missing equipment is added, " (optional)" marks optional links)
             for equip_name in recipe['equipment']:
-                cursor.execute('SELECT equipment_id FROM equipment WHERE name = ?', (equip_name,))
-                result = cursor.fetchone()
-                
-                if result:
-                    equip_id = result[0]
-                    cursor.execute('''
-                        INSERT INTO recipe_equipment (recipe_id, equipment_id, optional)
-                        VALUES (?, ?, 0)
-                    ''', (recipe_id, equip_id))
+                equip_id, optional = find_or_create_equipment_id(cursor, equip_name)
+                cursor.execute('''
+                    INSERT INTO recipe_equipment (recipe_id, equipment_id, optional)
+                    VALUES (?, ?, ?)
+                ''', (recipe_id, equip_id, int(optional)))
         
         self.conn.commit()
         print(f"Populated {len(recipes_data)} recipes with ingredients and equipment")
