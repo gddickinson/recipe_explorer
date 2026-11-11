@@ -15,6 +15,7 @@ import re
 import urllib.parse
 
 from db_operations import find_or_create_ingredient_id, parse_ingredient_line
+from recipe_scaling import scale_recipe_ingredients
 
 class RecipeExplorerApp:
     def __init__(self, root):
@@ -216,6 +217,20 @@ class RecipeExplorerApp:
 
         ttk.Label(details_frame, text="Recipe Details", style='Header.TLabel').pack(anchor='w', pady=5)
 
+        # Servings and units for the ingredient list (recipe_scaling.py)
+        scale_frame = ttk.Frame(details_frame)
+        scale_frame.pack(fill='x', pady=(0, 5))
+        ttk.Label(scale_frame, text="Servings:").pack(side='left')
+        self.servings_var = tk.StringVar(value='')
+        servings_spin = ttk.Spinbox(scale_frame, from_=1, to=1000, width=6, textvariable=self.servings_var,
+                                    command=self.refresh_recipe_details)
+        servings_spin.pack(side='left', padx=5)
+        servings_spin.bind('<Return>', self.refresh_recipe_details)
+        servings_spin.bind('<FocusOut>', self.refresh_recipe_details)
+        self.metric_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(scale_frame, text="Metric units (g, ml)", variable=self.metric_var,
+                        command=self.refresh_recipe_details).pack(side='left', padx=10)
+
         self.recipe_details_text = scrolledtext.ScrolledText(details_frame, wrap=tk.WORD,
                                                              font=('Arial', 10))
         self.recipe_details_text.pack(fill='both', expand=True)
@@ -331,7 +346,29 @@ class RecipeExplorerApp:
         index = selection[0]
         recipe = self.recipe_data[index]
         self.current_recipe = recipe
+        self.servings_var.set(str(recipe['servings'] or ''))
+        self.show_recipe(recipe)
 
+    def shown_servings(self, recipe):
+        """Servings chosen in the spinbox (the recipe's own if blank or invalid)."""
+        try:
+            value = int(self.servings_var.get())
+        except (TypeError, ValueError):
+            return recipe['servings']
+        return value if 1 <= value <= 1000 else recipe['servings']
+
+    def scaled_ingredients(self, recipe):
+        """The recipe's ingredients scaled to the chosen servings and units."""
+        rows = [dict(r) for r in self.get_recipe_ingredients(recipe['recipe_id'])]
+        return scale_recipe_ingredients(rows, recipe['servings'], self.shown_servings(recipe), self.metric_var.get())
+
+    def refresh_recipe_details(self, event=None):
+        """Redraw the current recipe (after a servings, units or rating change)."""
+        if self.current_recipe:
+            self.show_recipe(self.current_recipe)
+
+    def show_recipe(self, recipe):
+        """Show a recipe in the details panel"""
         # Clear previous details
         self.recipe_details_text.config(state='normal')
         self.recipe_details_text.delete('1.0', tk.END)
@@ -357,8 +394,10 @@ class RecipeExplorerApp:
         self.recipe_details_text.insert(tk.END, "\n")
 
         # Ingredients
-        self.recipe_details_text.insert(tk.END, "Ingredients\n", 'header')
-        ingredients = self.get_recipe_ingredients(recipe['recipe_id'])
+        servings = self.shown_servings(recipe)
+        scaled = f" (scaled to {servings} servings)" if servings != recipe['servings'] else ""
+        self.recipe_details_text.insert(tk.END, f"Ingredients{scaled}\n", 'header')
+        ingredients = self.scaled_ingredients(recipe)
         for ing in ingredients:
             ing_text = f"• {ing['quantity']} {ing['unit']} {ing['name']}"
             if ing['notes']:
@@ -370,7 +409,8 @@ class RecipeExplorerApp:
         self.recipe_details_text.insert(tk.END, "Equipment Needed\n", 'header')
         equipment = self.get_recipe_equipment(recipe['recipe_id'])
         for equip in equipment:
-            self.recipe_details_text.insert(tk.END, f"• {equip['name']}\n", 'value')
+            optional = " (optional)" if equip['optional'] else ""
+            self.recipe_details_text.insert(tk.END, f"• {equip['name']}{optional}\n", 'value')
         self.recipe_details_text.insert(tk.END, "\n")
 
         # Instructions
@@ -436,7 +476,7 @@ class RecipeExplorerApp:
             messagebox.showinfo("No Recipe Selected", "Please select a recipe first")
             return
 
-        ingredients = self.get_recipe_ingredients(self.current_recipe['recipe_id'])
+        ingredients = self.scaled_ingredients(self.current_recipe)
         added_count = 0
 
         for ing in ingredients:
@@ -498,7 +538,7 @@ class RecipeExplorerApp:
                              (rating_var.get(), self.current_recipe['recipe_id']))
                 self.conn.commit()
                 self.current_recipe['rating'] = rating_var.get()
-                self.on_recipe_select(None)  # Refresh display
+                self.refresh_recipe_details()  # Refresh display
                 dialog.destroy()
                 messagebox.showinfo("Success", "Rating saved!")
             except sqlite3.Error as e:
