@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from db_operations import find_or_create_equipment_id, split_optional  # noqa: E402
+from db_operations import equipment_name, find_or_create_equipment_id  # noqa: E402
 from repair_ingredient_links import seed_recipes  # noqa: E402
 
 
@@ -31,7 +31,7 @@ def missing(conn: sqlite3.Connection) -> list[tuple]:
             "SELECT e.name, re.optional FROM recipe_equipment re JOIN equipment e USING (equipment_id) "
             "WHERE re.recipe_id = ?", (row[0],))}
         for name in recipe["equipment"]:
-            base, optional = split_optional(name)
+            base, optional = equipment_name(name)
             if (name.lower(), False) not in linked and (base.lower(), optional) not in linked:
                 out.append((row[0], recipe["name"], name))
     return out

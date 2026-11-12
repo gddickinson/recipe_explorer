@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from db_operations import split_optional  # noqa: E402
+from db_operations import equipment_name, split_optional  # noqa: E402
 from recipe_database import RecipeDatabase  # noqa: E402
 from repair_ingredient_links import seed_recipes  # noqa: E402
 
@@ -29,7 +29,7 @@ def missing_equipment(conn) -> list:
             "SELECT e.name, re.optional FROM recipe_equipment re JOIN equipment e USING (equipment_id) "
             "WHERE re.recipe_id = ?", (row[0],))}
         for name in recipe["equipment"]:
-            base, optional = split_optional(name)
+            base, optional = equipment_name(name)
             if (name.lower(), False) not in linked and (base.lower(), optional) not in linked:
                 out.append((recipe["name"], name))
     return out

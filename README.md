@@ -362,7 +362,7 @@ python3 recipe_database.py
 
 - **Recipes**: 124 from 17 cuisines (54 from `recipe_database.py`, 70 more already in the committed database)
 - **Ingredients**: 335 (31 with full details: storage, substitutes, nutrition, allergens, season)
-- **Equipment**: 43 items (27 with full details, 16 added from the recipes' equipment lists)
+- **Equipment**: 38 items (27 with full details, 11 added from the recipes' equipment lists)
 - **Cuisines**: 17 world cuisines
 
 ## Future Enhancements

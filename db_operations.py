@@ -36,19 +36,38 @@ def split_optional(name: str):
     return name, False
 
 
+# Equipment names in the recipes that mean an item the equipment table already has (lower-case alias -> canonical).
+# Applied when recipes are linked; scripts/merge_equipment_aliases.py merged the committed database the same way.
+EQUIPMENT_ALIASES = {
+    "strainer": "Colander/Strainer",            # Tzatziki: straining yogurt/cucumber
+    "large skillet": "Skillet/Frying Pan",      # Paella
+    "grill or skillet": "Skillet/Frying Pan",   # Classic Hamburger (either; the skillet is the item in the table)
+    "griddle or skillet": "Skillet/Frying Pan",  # Buttermilk Pancakes
+    "small bowl": "Mixing Bowls",               # Miso Soup: dissolving the miso
+}
+
+
+def equipment_name(name: str):
+    """Canonical equipment name and optional flag: 'Large Skillet (optional)' -> ('Skillet/Frying Pan', True)."""
+    base, optional = split_optional(name)
+    return EQUIPMENT_ALIASES.get(base.lower(), base), optional
+
+
 def find_or_create_equipment_id(cursor: sqlite3.Cursor, name: str, category: str = "Other"):
     """(equipment_id, optional) for an equipment name as a recipe lists it; missing equipment is added.
 
     An exact (case-insensitive) match wins, so the existing "Electric Mixer (optional)" row is still used. Otherwise a
     trailing " (optional)" marks an optional link to the equipment without the suffix ("Blender (optional)" ->
-    Blender, optional). Equipment not in the table yet is inserted (category "Other", not essential) instead of being
-    dropped, as the seed script used to do. The caller commits.
+    Blender, optional); EQUIPMENT_ALIASES map overlapping names to one item ("Strainer" -> Colander/Strainer).
+    Equipment not in the table yet is inserted (category "Other", not essential) instead of being dropped, as the
+    seed script used to do. The caller commits.
     """
-    cursor.execute("SELECT equipment_id FROM equipment WHERE name = ? COLLATE NOCASE", (name.strip(),))
-    row = cursor.fetchone()
-    if row:
-        return row[0], False
-    base, optional = split_optional(name)
+    if split_optional(name)[0].lower() not in EQUIPMENT_ALIASES:
+        cursor.execute("SELECT equipment_id FROM equipment WHERE name = ? COLLATE NOCASE", (name.strip(),))
+        row = cursor.fetchone()
+        if row:
+            return row[0], False
+    base, optional = equipment_name(name)
     cursor.execute("SELECT equipment_id FROM equipment WHERE name = ? COLLATE NOCASE", (base,))
     row = cursor.fetchone()
     if row:
