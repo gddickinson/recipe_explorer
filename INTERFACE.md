@@ -6,7 +6,7 @@
 |------------------|---------|
 | `recipe_explorer.py` | Tkinter desktop app (`RecipeExplorerApp`, `main()`): recipes (servings spinbox + metric checkbox via `recipe_scaling`: `show_recipe()`, `scaled_ingredients()`), ingredients, equipment, cuisines, shopping list tabs, add/import/export dialogs (~1920 lines; splitting it into tab modules is a ROADMAP item) |
 | `recipe_database.py` | `RecipeDatabase`: schema and the 54 seed recipes, ingredients, equipment, cuisines (`initialize_database()`) |
-| `db_operations.py` | `RecipeDAO` (all queries: recipes, ingredients, equipment, cuisines, insert/update/rate, ingredient rows), `find_or_create_ingredient_id()` (exact-name lookup used by the seed script, DAO and import dialog), `find_or_create_equipment_id()` / `split_optional()` (seed equipment: adds missing items, " (optional)" -> optional link), `parse_ingredient_line()` |
+| `db_operations.py` | `RecipeDAO` (all queries: recipes, ingredients, equipment, cuisines, insert/update/rate, ingredient rows), `find_or_create_ingredient_id()` (exact-name lookup used by the seed script, DAO and import dialog), `find_or_create_equipment_id()` / `split_optional()` / `equipment_name()` + `EQUIPMENT_ALIASES` (seed equipment: adds missing items, " (optional)" -> optional link, overlapping names -> one canonical item), `parse_ingredient_line()` |
 | `recipe_scaling.py` | Pure: `parse_quantity()`, `format_amount()` (kitchen fractions), `scale_item()`, `scale_recipe_ingredients()` (servings + US/metric), `combine()` (shopping-list totals) |
 | `run_recipe_explorer.py` | Desktop launcher |
 | `recipe_collection.db` | SQLite database (tracked; 124 recipes) |
@@ -36,9 +36,12 @@
 | `scripts/make_scaling_fixture.py` | Writes `tests/fixtures/scaling_fixture.json` from `recipe_scaling.py` |
 | `scripts/repair_ingredient_links.py` | Relinks seed-recipe ingredient rows mislinked by the old LIKE lookup (`--dry-run`) |
 | `tests/test_web.py` | Web tests: endpoints, filters, read-only DB, writes on a temp copy, static build, JS tests, parity |
+| `scripts/merge_equipment_aliases.py` | Merges overlapping equipment items into their canonical item (`EQUIPMENT_ALIASES`; `--dry-run`) |
+| `scripts/repair_later_recipe_links.py` | Relinks recipes 55-124's mislinked ingredients from the reviewed table `scripts/fixes/ingredient_links_recipes_55_124.csv` (`--dry-run`) |
 | `scripts/repair_equipment_links.py` | Adds seed-recipe equipment links the old seed script dropped (`--dry-run`) |
 | `tests/test_ingredient_linking.py` | Regression tests for exact ingredient linking and the database repair |
 | `tests/test_equipment_linking.py` | Regression tests for seed equipment linking and the database repair |
+| `tests/test_later_recipe_links.py`, `tests/test_equipment_merge.py` | Mapping-table checks, limited and idempotent repairs on copies, committed DB repaired |
 | `tests/test_desktop_scaling.py` | Desktop recipe view servings/metric (real Tk on a temp DB copy; skipped without a display) |
 | `.github/workflows/pages.yml` | Test, build and publish the static site on push to main |
 

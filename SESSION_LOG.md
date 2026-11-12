@@ -36,3 +36,16 @@
   Test: `tests/test_desktop_scaling.py` (real Tk, temp DB copy, skipped without a display).
 - Checks after this follow-up: `pytest tests/` 557 passed; node tests ok; static build 525 endpoints; screenshots
   static 19 routes + server 14 routes ok, phone overflow 0px; repo database unchanged by the checks.
+
+## 2026-11-11 -- Recipes 55-124 ingredient links and equipment merges
+- Fix: 75 wrong ingredient links in recipes 55-124 (same LIKE bug) relinked by `scripts/repair_later_recipe_links.py`
+  from the reviewed table `scripts/fixes/ingredient_links_recipes_55_124.csv` (recipe, old, quantity, unit, new,
+  reason; 8 reviewed candidates kept). Guard: new name contained in the old one; each row matches once; idempotent.
+  Green Onions->Onion 16, Brown Sugar->Sugar 12, Century Eggs->Eggs 11, Chicken Bones->Chicken 7, Cherry
+  Tomatoes->Tomatoes 7, Ground Lamb->Lamb 3, Buttermilk->Milk 3, 16 single fixes. New ingredients: Lamb, Lemon, Oil,
+  Tonkatsu (339 ingredients).
+- Fix: overlapping equipment merged via `db_operations.EQUIPMENT_ALIASES` + `scripts/merge_equipment_aliases.py`:
+  Strainer->Colander/Strainer; Large Skillet, Grill or Skillet, Griddle or Skillet->Skillet/Frying Pan; Small
+  Bowl->Mixing Bowls (equipment 43 -> 38). Fresh builds use the canonical items.
+- Checks: pytest tests/ 563 passed; node tests ok; static build 524 endpoints; screenshots static 17 + server 13
+  routes ok, phone overflow 0px; repo DB unchanged by the checks.
