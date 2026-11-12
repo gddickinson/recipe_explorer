@@ -34,3 +34,5 @@
   `recipe_scaling.py`; "Add to shopping list" uses the scaled amounts; optional equipment is marked. The rating dialog
   now refreshes via the current recipe (it used the listbox selection, which can be empty after the dialog).
   Test: `tests/test_desktop_scaling.py` (real Tk, temp DB copy, skipped without a display).
+- Checks after this follow-up: `pytest tests/` 557 passed; node tests ok; static build 525 endpoints; screenshots
+  static 19 routes + server 14 routes ok, phone overflow 0px; repo database unchanged by the checks.
